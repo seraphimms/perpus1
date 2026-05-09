@@ -15,17 +15,25 @@ class PinjamController extends Controller
     {
         $query = Pinjam::with(['user', 'detailPinjam.buku']);
 
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('search')) {
-            $query->whereHas('user', fn($q) => $q->where('nama', 'like', '%' . $request->search . '%'));
-        }
-
-        $pinjam = $query->latest()->paginate(10)->withQueryString();
-        return view('pinjam.index', compact('pinjam'));
+    if ($request->filled('search')) {
+        $query->whereHas('user', fn($q) => $q->where('nama', 'like', '%' . $request->search . '%'));
     }
+
+    if ($request->filled('status')) {
+        $query->where('status', $request->status);
+    }
+
+    if ($request->filled('dari')) {
+        $query->whereDate('tgl_pinjam', '>=', $request->dari);
+    }
+
+    if ($request->filled('sampai')) {
+        $query->whereDate('tgl_pinjam', '<=', $request->sampai);
+    }
+
+    $pinjam = $query->latest()->paginate(10)->withQueryString();
+    return view('pinjam.index', compact('pinjam'));
+}
 
     public function create()
     {

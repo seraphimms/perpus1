@@ -18,13 +18,21 @@ class PengembalianController extends Controller
     {
         $query = Pengembalian::with(['pinjam.user']);
 
-        if ($request->filled('search')) {
-            $query->whereHas('pinjam.user', fn($q) => $q->where('nama', 'like', '%' . $request->search . '%'));
-        }
-
-        $pengembalian = $query->latest()->paginate(10)->withQueryString();
-        return view('pengembalian.index', compact('pengembalian'));
+    if ($request->filled('search')) {
+        $query->whereHas('pinjam.user', fn($q) => $q->where('nama', 'like', '%' . $request->search . '%'));
     }
+
+    if ($request->filled('dari')) {
+        $query->whereDate('tgl_kembali', '>=', $request->dari);
+    }
+
+    if ($request->filled('sampai')) {
+        $query->whereDate('tgl_kembali', '<=', $request->sampai);
+    }
+
+    $pengembalian = $query->latest()->paginate(10)->withQueryString();
+    return view('pengembalian.index', compact('pengembalian'));
+}
 
     public function create(Request $request)
     {

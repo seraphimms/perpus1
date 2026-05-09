@@ -1,6 +1,57 @@
 @extends('layouts.app')
 @section('title', 'Buat Transaksi Peminjaman')
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css">
+<style>
+    .choices__inner {
+        background: rgba(255,255,255,0.06) !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-radius: 10px !important;
+        padding: 6px 10px !important;
+        min-height: 42px !important;
+    }
+    .choices__list--dropdown {
+        background: #1e2a45 !important;
+        border: 1px solid rgba(255,255,255,0.12) !important;
+        border-radius: 10px !important;
+    }
+    .choices__list--dropdown .choices__item--selectable {
+        color: rgba(255,255,255,0.80) !important;
+        font-size: 13px !important;
+        padding: 8px 14px !important;
+    }
+    .choices__list--dropdown .choices__item--selectable.is-highlighted {
+        background: rgba(99,102,241,0.20) !important;
+        color: white !important;
+    }
+    .choices__input {
+        background: transparent !important;
+        color: white !important;
+        font-size: 13px !important;
+    }
+    .choices__input--cloned {
+        color: white !important;
+    }
+    .choices__placeholder {
+        color: rgba(255,255,255,0.35) !important;
+        opacity: 1 !important;
+    }
+    .choices__list--single .choices__item {
+        color: rgba(255,255,255,0.85) !important;
+        font-size: 13px !important;
+    }
+    .choices__list--dropdown {
+        top: 100% !important;
+        bottom: auto !important;
+    }
+    .choices[data-type*=select-one] .choices__list--dropdown {
+        top: 100% !important;
+        bottom: auto !important;
+    }
+</style>
+@endpush
+
 @section('content')
 <div style="max-width:780px;">
     <div class="glass" style="border-radius:16px;padding:28px;">
@@ -13,8 +64,8 @@
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                     <div>
                         <label style="display:block;color:rgba(255,255,255,0.70);font-size:13px;font-weight:500;margin-bottom:7px;">Anggota <span style="color:#f87171;">*</span></label>
-                        <select name="user_id" class="glass-select"
-                                style="width:100%;border-radius:10px;padding:10px 14px;font-size:13px;box-sizing:border-box;">
+                        <select name="user_id" id="selectAnggota"
+                                style="width:100%;box-sizing:border-box;">
                             <option value="">-- Pilih Anggota --</option>
                             @foreach($members as $m)
                             <option value="{{ $m->id }}" {{ old('user_id')==$m->id ? 'selected':'' }}>
@@ -52,8 +103,11 @@
                             <div style="display:flex;align-items:flex-end;gap:12px;">
                                 <div style="flex:2;">
                                     <label style="display:block;color:rgba(255,255,255,0.55);font-size:12px;font-weight:500;margin-bottom:6px;">Pilih Buku <span style="color:#f87171;">*</span></label>
-                                    <select :name="`buku[${index}][buku_id]`" class="glass-select"
-                                            style="width:100%;border-radius:9px;padding:8px 12px;font-size:13px;box-sizing:border-box;">
+                                    <select :name="`buku[${index}][buku_id]`"
+                                            :id="`selectBuku${index}`"
+                                            class="buku-select"
+                                            style="width:100%;box-sizing:border-box;"
+                                            x-init="$nextTick(() => initBukuSelect($el))">
                                         <option value="">-- Pilih Buku --</option>
                                         @foreach($buku as $b)
                                         <option value="{{ $b->id }}">{{ $b->judul }} (stok: {{ $b->jumlah }})</option>
@@ -89,12 +143,37 @@
 </div>
 
 @push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
+// Init select anggota
+new Choices(document.getElementById('selectAnggota'), {
+    searchEnabled: true,
+    searchPlaceholderValue: 'Cari nama anggota...',
+    noResultsText: 'Anggota tidak ditemukan',
+    itemSelectText: '',
+    shouldSort: false,
+});
+
+// Fungsi init select buku (dipanggil tiap kali baris baru ditambah)
+function initBukuSelect(el) {
+    new Choices(el, {
+        searchEnabled: true,
+        searchPlaceholderValue: 'Cari judul buku...',
+        noResultsText: 'Buku tidak ditemukan',
+        itemSelectText: '',
+        shouldSort: false,
+    });
+}
+
 function pinjamForm() {
     return {
         items: [{ jumlah: 1, tgl_kembali: '' }],
-        tambahBuku() { this.items.push({ jumlah: 1, tgl_kembali: '' }); },
-        hapusBuku(index) { this.items.splice(index, 1); }
+        tambahBuku() {
+            this.items.push({ jumlah: 1, tgl_kembali: '' });
+        },
+        hapusBuku(index) {
+            this.items.splice(index, 1);
+        }
     }
 }
 </script>

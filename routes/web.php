@@ -7,6 +7,7 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PengembalianController;
 use App\Http\Controllers\PinjamController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\ProfilController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -16,8 +17,16 @@ Route::get('/', function () {
 Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
+    // Profile
+    Route::get('/profil', [ProfilController::class, 'index'])->name('profil.index');
+    Route::put('/profil', [ProfilController::class, 'update'])->name('profil.update');
+    Route::put('/profil/password', [ProfilController::class, 'updatePassword'])->name('profil.password');
+    
     // Buku: semua user yang login bisa lihat index
     Route::get('/buku', [BukuController::class, 'index'])->name('buku.index');
+
+    // Member - riwayat pinjaman sendiri
+    Route::get('/riwayat-pinjaman', [App\Http\Controllers\MemberController::class, 'index'])->name('member.riwayat');
 
     // Admin-only routes
     Route::middleware(['admin'])->group(function () {

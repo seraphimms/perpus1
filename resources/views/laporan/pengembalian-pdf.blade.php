@@ -9,7 +9,7 @@
         .subtitle { text-align: center; color: #666; font-size: 11px; margin-bottom: 4px; }
         .period { text-align: center; font-size: 10px; color: #888; margin-bottom: 15px; }
         table { width: 100%; border-collapse: collapse; }
-        th { background: #065f46; color: white; padding: 6px 8px; text-align: left; font-size: 10px; }
+        th { background: #000000; color: white; padding: 6px 8px; text-align: left; font-size: 10px; }
         td { padding: 5px 8px; border-bottom: 1px solid #e5e7eb; font-size: 10px; }
         tr:nth-child(even) td { background: #f8fafc; }
         tfoot td { background: #f1f5f9; font-weight: bold; }
@@ -19,7 +19,7 @@
 </head>
 <body>
     <h1>Laporan Pengembalian Buku</h1>
-    <p class="subtitle">Perpustakaan SMP Muhammadiyah 1</p>
+    <p class="subtitle">Perpustakaan SMP Muhammadiyah 1 Cilacap</p>
     <p class="period">
         Periode: {{ $dari ? date('d/m/Y', strtotime($dari)) : 'Semua' }}
         s/d {{ $sampai ? date('d/m/Y', strtotime($sampai)) : 'Semua' }}

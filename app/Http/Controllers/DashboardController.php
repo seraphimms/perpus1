@@ -6,40 +6,108 @@ use App\Models\Buku;
 use App\Models\Pengembalian;
 use App\Models\Pinjam;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
     public function index()
     {
-        $totalBuku = Buku::sum('jumlah');
-        $totalMember = User::where('jenis', 'member')->count();
-        $totalPeminjamanAktif = Pinjam::where('status', 'pinjam')->count();
-        $totalDenda = Pengembalian::sum('total_denda');
+    if (auth()->user()->isAdmin()) {
+        return $this->adminDashboard();
+    }
+    return $this->memberDashboard();
+    }
 
-        $peminjamanPerBulan = Pinjam::selectRaw('MONTH(tgl_pinjam) as bulan, YEAR(tgl_pinjam) as tahun, COUNT(*) as total')
-            ->whereYear('tgl_pinjam', now()->year)
-            ->groupBy('tahun', 'bulan')
-            ->orderBy('bulan')
+    private function adminDashboard()
+{
+    $totalBuku            = Buku::sum('jumlah');
+    $totalMember          = User::where('jenis', 'member')->count();
+    $totalPeminjamanAktif = Pinjam::where('status', 'pinjam')->count();
+    $totalDenda           = Pengembalian::sum('total_denda');
+
+    // Chart data
+    $peminjamanPerBulan = Pinjam::selectRaw('MONTH(tgl_pinjam) as bulan, YEAR(tgl_pinjam) as tahun, COUNT(*) as total')
+        ->whereYear('tgl_pinjam', now()->year)
+        ->groupBy('tahun', 'bulan')
+        ->orderBy('bulan')
+        ->get();
+
+    $labels    = [];
+    $data      = [];
+    $namaBulan = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+    for ($i = 1; $i <= 12; $i++) {
+        $labels[] = $namaBulan[$i - 1];
+        $found    = $peminjamanPerBulan->firstWhere('bulan', $i);
+        $data[]   = $found ? $found->total : 0;
+    }
+
+    // Recent activity (gabung pinjam + pengembalian, 8 terbaru)
+    $recentPinjam = Pinjam::with('user')
+    ->where('created_at', '>=', now()->subHours(2))
+    ->latest()
+    ->take(8)
+    ->get()
+    ->map(fn($p) => [
+        'type'       => 'pinjam',
+        'nama'       => $p->user->nama,
+        'keterangan' => 'Meminjam ' . $p->detailPinjam()->count() . ' buku',
+        'waktu'      => $p->created_at->locale('id')->diffForHumans(),
+        'created_at' => $p->created_at,
+    ]);
+
+$recentKembali = \App\Models\Pengembalian::with('pinjam.user')
+    ->where('created_at', '>=', now()->subHours(2))
+    ->latest()
+    ->take(8)
+    ->get()
+    ->map(fn($k) => [
+        'type'       => 'kembali',
+        'nama'       => $k->pinjam->user->nama,
+        'keterangan' => 'Mengembalikan buku',
+        'waktu'      => $k->created_at->locale('id')->diffForHumans(),
+        'created_at' => $k->created_at,
+    ]);
+
+$recentActivity = $recentPinjam->concat($recentKembali)
+    ->sortByDesc('created_at')
+    ->take(8)
+    ->values();
+
+    // Peminjaman terlambat
+    $pinjamanTerlambat = Pinjam::with(['user', 'detailPinjam'])
+        ->where('status', 'pinjam')
+        ->whereHas('detailPinjam', fn($q) => $q->where('tgl_kembali_estimasi', '<', now()->toDateString()))
+        ->latest()
+        ->take(5)
+        ->get();
+
+    return view('dashboard', compact(
+        'totalBuku', 'totalMember', 'totalPeminjamanAktif', 'totalDenda',
+        'labels', 'data', 'recentActivity', 'pinjamanTerlambat'
+    ));
+}
+
+    private function memberDashboard()
+    {
+        $user = auth()->user();
+
+        $totalPinjaman    = $user->pinjam()->count();
+        $sedangDipinjam   = $user->pinjam()->where('status', 'pinjam')->count();
+        $sudahDikembalikan = $user->pinjam()->where('status', 'kembali')->count();
+
+        // Pinjaman aktif dengan detail buku
+        $pinjamanAktif = $user->pinjam()
+            ->with(['detailPinjam.buku'])
+            ->where('status', 'pinjam')
+            ->latest()
             ->get();
 
-        $labels = [];
-        $data = [];
-        $namaBulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+        // 4 buku terbaru
+        $bukuTerbaru = Buku::with('kategori')->latest()->take(4)->get();
 
-        for ($i = 1; $i <= 12; $i++) {
-            $labels[] = $namaBulan[$i - 1];
-            $found = $peminjamanPerBulan->firstWhere('bulan', $i);
-            $data[] = $found ? $found->total : 0;
-        }
-
-        return view('dashboard', compact(
-            'totalBuku',
-            'totalMember',
-            'totalPeminjamanAktif',
-            'totalDenda',
-            'labels',
-            'data'
+        return view('dashboard-member', compact(
+            'totalPinjaman', 'sedangDipinjam', 'sudahDikembalikan',
+            'pinjamanAktif', 'bukuTerbaru'
         ));
     }
 }

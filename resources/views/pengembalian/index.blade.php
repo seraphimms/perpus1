@@ -3,15 +3,18 @@
 
 @section('content')
 <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
-    <form action="{{ route('pengembalian.index') }}" method="GET" style="display:flex;gap:8px;">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama anggota..."
-               class="glass-input" style="border-radius:10px;padding:8px 14px;font-size:13px;width:210px;">
-        <button type="submit" class="btn-secondary" style="padding:8px 16px;border-radius:10px;font-size:13px;cursor:pointer;">Cari</button>
-        @if(request('search'))
-        <a href="{{ route('pengembalian.index') }}" class="btn-secondary"
-           style="padding:8px 16px;border-radius:10px;font-size:13px;text-decoration:none;display:inline-block;">Reset</a>
-        @endif
-    </form>
+    <form action="{{ route('pengembalian.index') }}" method="GET" style="display:flex;flex-wrap:wrap;gap:8px;">
+    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama anggota..."
+           class="glass-input" style="border-radius:10px;padding:8px 14px;font-size:13px;width:180px;">
+    <input type="date" name="dari" value="{{ request('dari') }}"
+           class="glass-input" style="border-radius:10px;padding:8px 14px;font-size:13px;">
+    <input type="date" name="sampai" value="{{ request('sampai') }}"
+           class="glass-input" style="border-radius:10px;padding:8px 14px;font-size:13px;">
+    <button type="submit" class="btn-secondary" style="padding:8px 16px;border-radius:10px;font-size:13px;cursor:pointer;">Cari</button>
+    @if(request()->hasAny(['search','dari','sampai']))
+    <a href="{{ route('pengembalian.index') }}" class="btn-secondary" style="padding:8px 16px;border-radius:10px;font-size:13px;text-decoration:none;display:inline-block;">Reset</a>
+    @endif
+</form>
 
     @if(auth()->user()->isAdmin())
     <a href="{{ route('pengembalian.create') }}" class="btn-success"

@@ -4,18 +4,22 @@
 @section('content')
 <div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
     <form action="{{ route('pinjam.index') }}" method="GET" style="display:flex;flex-wrap:wrap;gap:8px;">
-        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama anggota..."
-               class="glass-input" style="border-radius:10px;padding:8px 14px;font-size:13px;width:200px;">
-        <select name="status" class="glass-select" style="border-radius:10px;padding:8px 14px;font-size:13px;min-width:160px;">
-            <option value="">Semua Status</option>
-            <option value="pinjam"  {{ request('status')==='pinjam'  ? 'selected':'' }}>Sedang Dipinjam</option>
-            <option value="kembali" {{ request('status')==='kembali' ? 'selected':'' }}>Sudah Kembali</option>
-        </select>
-        <button type="submit" class="btn-secondary" style="padding:8px 16px;border-radius:10px;font-size:13px;cursor:pointer;">Cari</button>
-        @if(request()->hasAny(['search','status']))
-        <a href="{{ route('pinjam.index') }}" class="btn-secondary" style="padding:8px 16px;border-radius:10px;font-size:13px;text-decoration:none;display:inline-block;">Reset</a>
-        @endif
-    </form>
+    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama anggota..."
+           class="glass-input" style="border-radius:10px;padding:8px 14px;font-size:13px;width:180px;">
+    <select name="status" class="glass-select" style="border-radius:10px;padding:8px 14px;font-size:13px;min-width:140px;">
+        <option value="">Semua Status</option>
+        <option value="pinjam"  {{ request('status')==='pinjam'  ? 'selected':'' }}>Sedang Dipinjam</option>
+        <option value="kembali" {{ request('status')==='kembali' ? 'selected':'' }}>Sudah Kembali</option>
+    </select>
+    <input type="date" name="dari" value="{{ request('dari') }}"
+           class="glass-input" style="border-radius:10px;padding:8px 14px;font-size:13px;">
+    <input type="date" name="sampai" value="{{ request('sampai') }}"
+           class="glass-input" style="border-radius:10px;padding:8px 14px;font-size:13px;">
+    <button type="submit" class="btn-secondary" style="padding:8px 16px;border-radius:10px;font-size:13px;cursor:pointer;">Cari</button>
+    @if(request()->hasAny(['search','status','dari','sampai']))
+    <a href="{{ route('pinjam.index') }}" class="btn-secondary" style="padding:8px 16px;border-radius:10px;font-size:13px;text-decoration:none;display:inline-block;">Reset</a>
+    @endif
+</form>
 
     @if(auth()->user()->isAdmin())
     <a href="{{ route('pinjam.create') }}" class="btn-primary"
