@@ -36,26 +36,31 @@ class PinjamController extends Controller
 }
 
     public function create()
-    {
-        $members = User::where('jenis', 'member')->orderBy('nama')->get();
-        $buku = Buku::where('jumlah', '>', 0)->orderBy('judul')->get();
-        return view('pinjam.create', compact('members', 'buku'));
-    }
+{
+    $members = User::where('jenis', 'member')->orderBy('nama')->get();
+    $buku = Buku::where('jumlah', '>', 0)->orderBy('judul')->get();
+
+    // Cek member yang masih punya pinjaman aktif
+    $memberPinjamAktif = Pinjam::where('status', 'pinjam')
+        ->pluck('user_id')
+        ->toArray();
+
+    return view('pinjam.create', compact('members', 'buku', 'memberPinjamAktif'));
+}
 
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'tgl_pinjam' => 'required|date',
-            'buku' => 'required|array|min:1',
-            'buku.*.buku_id' => 'required|exists:buku,id',
-            'buku.*.jumlah' => 'required|integer|min:1',
-            'buku.*.tgl_kembali_estimasi' => 'required|date|after:tgl_pinjam',
-        ], [
-            'buku.required' => 'Minimal satu buku harus dipilih.',
-            'buku.*.buku_id.required' => 'Buku harus dipilih.',
-            'buku.*.tgl_kembali_estimasi.after' => 'Tanggal kembali harus setelah tanggal pinjam.',
-        ]);
+        'user_id'    => 'required|exists:users,id',
+        'tgl_pinjam' => 'required|date',
+        'buku'       => 'required|array|min:1',
+        'buku.*.buku_id' => 'required|exists:buku,id',
+        'buku.*.jumlah'  => 'required|integer|min:1',
+        'buku.*.tgl_kembali_estimasi' => 'required|date',
+    ], [
+        'buku.required' => 'Minimal satu buku harus dipilih.',
+        'buku.*.buku_id.required' => 'Buku harus dipilih.',
+    ]);
 
         DB::beginTransaction();
         try {
@@ -66,22 +71,25 @@ class PinjamController extends Controller
             ]);
 
             foreach ($request->buku as $item) {
-                $buku = Buku::findOrFail($item['buku_id']);
+    $buku = Buku::findOrFail($item['buku_id']);
 
-                if ($buku->jumlah < $item['jumlah']) {
-                    DB::rollBack();
-                    return back()->with('error', "Stok buku \"{$buku->judul}\" tidak mencukupi (tersedia: {$buku->jumlah}).")->withInput();
-                }
+    if ($buku->jumlah < $item['jumlah']) {
+        DB::rollBack();
+        return back()->with('error', "Stok buku \"{$buku->judul}\" tidak mencukupi.")->withInput();
+    }
 
-                DetailPinjam::create([
-                    'pinjam_id' => $pinjam->id,
-                    'buku_id' => $item['buku_id'],
-                    'jumlah' => $item['jumlah'],
-                    'tgl_kembali_estimasi' => $item['tgl_kembali_estimasi'],
-                ]);
+    // Paksa 3 hari dari tgl pinjam
+    $tglKembaliEstimasi = $this->tambahHariKerja(\Carbon\Carbon::parse($request->tgl_pinjam), 3)->toDateString();
 
-                $buku->decrement('jumlah', $item['jumlah']);
-            }
+    DetailPinjam::create([
+        'pinjam_id'           => $pinjam->id,
+        'buku_id'             => $item['buku_id'],
+        'jumlah'              => $item['jumlah'],
+        'tgl_kembali_estimasi' => $tglKembaliEstimasi,
+    ]);
+
+    $buku->decrement('jumlah', $item['jumlah']);
+}
 
             DB::commit();
             return redirect()->route('pinjam.index')->with('success', 'Transaksi peminjaman berhasil dibuat.');
@@ -96,4 +104,18 @@ class PinjamController extends Controller
         $pinjam->load(['user', 'detailPinjam.buku', 'pengembalian.detailPengembalian.detailPinjam.buku']);
         return view('pinjam.show', compact('pinjam'));
     }
+    private function tambahHariKerja(\Carbon\Carbon $dari, int $hari): \Carbon\Carbon
+{
+    $current = $dari->copy();
+    $count   = 0;
+
+    while ($count < $hari) {
+        $current->addDay();
+        if ($current->dayOfWeek !== 0 && $current->dayOfWeek !== 6) {
+            $count++;
+        }
+    }
+
+    return $current;
+}
 }

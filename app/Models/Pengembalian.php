@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Pengembalian extends Model
 {
     protected $table = 'pengembalian';
-    protected $fillable = ['pinjam_id', 'tgl_kembali', 'total_denda'];
+    protected $fillable = ['pinjam_id', 'tgl_kembali', 'total_denda', 'status_denda'];
 
     protected function casts(): array
     {

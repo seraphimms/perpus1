@@ -20,11 +20,18 @@
     </form>
 
     @if(auth()->user()->isAdmin())
-    <a href="{{ route('buku.create') }}" class="btn-primary"
-       style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:10px;font-size:13.5px;text-decoration:none;">
-        <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-        Tambah Buku
-    </a>
+    <div style="display:flex;gap:8px;">
+        <a href="{{ route('buku.import.form') }}" class="btn-secondary"
+           style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:10px;font-size:13.5px;text-decoration:none;">
+            <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+            Import Excel
+        </a>
+        <a href="{{ route('buku.create') }}" class="btn-primary"
+           style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:10px;font-size:13.5px;text-decoration:none;">
+            <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+            Tambah Buku
+        </a>
+    </div>
     @endif
 </div>
 
@@ -118,11 +125,9 @@
     <div onclick="event.stopPropagation()"
          style="background:#1e2a45;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px;width:100%;max-width:500px;margin:16px;position:relative;max-height:90vh;overflow-y:auto;">
 
-        {{-- Tombol Close --}}
         <button onclick="closeModal()"
                 style="position:absolute;top:16px;right:16px;background:rgba(255,255,255,0.1);border:none;color:white;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;">✕</button>
 
-        {{-- Cover --}}
         <div style="text-align:center;margin-bottom:20px;">
             <img id="modalCover" src="" alt="Cover"
                  style="max-height:200px;object-fit:contain;border-radius:10px;display:none;">
@@ -132,11 +137,9 @@
             </div>
         </div>
 
-        {{-- Judul & Penulis --}}
         <h2 id="modalJudul" style="color:white;font-size:18px;font-weight:700;margin-bottom:4px;padding-right:32px;"></h2>
         <p id="modalPenulis" style="color:rgba(255,255,255,0.50);font-size:13px;margin-bottom:16px;"></p>
 
-        {{-- Info Grid --}}
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;">
             <div style="background:rgba(255,255,255,0.05);border-radius:10px;padding:10px 14px;">
                 <p style="color:rgba(255,255,255,0.40);font-size:11px;margin-bottom:3px;">Penerbit</p>
@@ -160,13 +163,11 @@
             </div>
         </div>
 
-        {{-- Deskripsi --}}
         <div id="modalDeskripsiWrap" style="background:rgba(255,255,255,0.05);border-radius:10px;padding:12px 14px;margin-bottom:16px;display:none;">
             <p style="color:rgba(255,255,255,0.40);font-size:11px;margin-bottom:6px;">Deskripsi</p>
             <p id="modalDeskripsi" style="color:rgba(255,255,255,0.80);font-size:13px;line-height:1.6;"></p>
         </div>
 
-        {{-- Tombol Edit (admin only) --}}
         @if(auth()->user()->isAdmin())
         <div style="text-align:right;">
             <a id="modalEditLink" href="#" class="btn-primary"
@@ -194,10 +195,10 @@ function showModal(id, judul, penulis, penerbit, tahun, isbn, stok, kategori, co
     const noCover = document.getElementById('modalNoCover');
     if (cover) {
         img.src = cover;
-        img.style.display    = 'block';
+        img.style.display     = 'block';
         noCover.style.display = 'none';
     } else {
-        img.style.display    = 'none';
+        img.style.display     = 'none';
         noCover.style.display = 'flex';
     }
 

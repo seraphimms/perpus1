@@ -86,32 +86,47 @@
                                     Est. kembali: <strong style="color:rgba(255,255,255,0.75);">{{ $dp->tgl_kembali_estimasi->format('d/m/Y') }}</strong>
                                 </span>
                                 @if($dp->tgl_kembali_estimasi->isPast())
-                                <span class="badge-red" style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;">
-                                    Terlambat {{ $dp->tgl_kembali_estimasi->diffForHumans(null,true) }}
-                                </span>
-                                @endif
+                                @php
+                                $hariTelat = 0;
+                                $current = $dp->tgl_kembali_estimasi->copy()->addDay();
+                                while ($current->lte(now()->startOfDay())) {
+                                    if ($current->dayOfWeek !== 0 && $current->dayOfWeek !== 6) {
+                                        $hariTelat++;
+                                    }
+                                    $current->addDay();
+                                }
+                            @endphp
+                            <span class="badge-red" style="display:inline-block;padding:2px 9px;border-radius:20px;font-size:11.5px;">
+                                Terlambat {{ $hariTelat }} hari
+                            </span>
+                            @endif
                             </div>
                         </div>
                         <div style="flex-shrink:0;">
                             <label style="display:block;color:rgba(255,255,255,0.55);font-size:12px;font-weight:500;margin-bottom:6px;">Kondisi Buku</label>
                             <select name="detail[{{ $i }}][kondisi_buku]" class="glass-select"
-                                    style="border-radius:9px;padding:8px 12px;font-size:13px;min-width:190px;box-sizing:border-box;">
-                                <option value="baik">✓ Baik</option>
-                                <option value="rusak">⚠ Rusak (+Rp 50.000)</option>
-                                <option value="hilang">✕ Hilang (+Rp 150.000)</option>
-                            </select>
-                        </div>
-                    </div>
+                            style="border-radius:9px;padding:8px 12px;font-size:13px;min-width:190px;box-sizing:border-box;"
+                            onchange="updateNotice(this, {{ $i }})">
+                            <option value="baik">✓ Baik</option>
+                            <option value="rusak">⚠ Rusak — wajib ganti buku</option>
+                            <option value="hilang">✕ Hilang — wajib ganti buku</option>
+                        </select>
+
+                    {{-- Notifikasi kondisi --}}
+                    <div id="notice-{{ $i }}" style="display:none;margin-top:8px;border-radius:8px;padding:8px 12px;font-size:12px;"></div>
                 </div>
-                @endforeach
             </div>
+        </div>
+        @endforeach
+    </div>
 
             {{-- Info Denda --}}
             <div style="padding:12px 16px;background:rgba(251,191,36,0.07);border:1px solid rgba(251,191,36,0.18);border-radius:10px;margin-bottom:20px;">
                 <p style="color:#fde68a;font-size:13px;line-height:1.6;">
-                    <strong>Ketentuan denda:</strong> Keterlambatan Rp 1.000/hari/eksemplar &bull;
-                    Rusak +Rp 50.000/eksemplar &bull; Hilang +Rp 150.000/eksemplar (stok tidak dikembalikan)
-                </p>
+                <strong>Ketentuan denda:</strong> Keterlambatan Rp 1.000/hari kerja/eksemplar &bull;
+                Rusak & Hilang: wajib mengganti buku dengan judul yang sama, tidak ada denda uang &bull;
+                Rusak Dan Hilang: stok tidak dikembalikan
+            </p>
             </div>
 
             <div style="display:flex;gap:10px;">
@@ -128,4 +143,31 @@
     </div>
     @endif
 </div>
+@push('scripts')
+<script>
+function updateNotice(select, index) {
+    const notice = document.getElementById('notice-' + index);
+    const kondisi = select.value;
+    const card = select.closest('div[style*="background"]');
+    const judulEl = card ? card.querySelector('p') : null;
+    const judul = judulEl ? judulEl.textContent.trim() : 'buku ini';
+
+    if (kondisi === 'rusak') {
+        notice.style.display = 'block';
+        notice.style.background = 'rgba(245,158,11,0.12)';
+        notice.style.border = '1px solid rgba(245,158,11,0.25)';
+        notice.style.color = '#fde68a';
+        notice.innerHTML = '⚠ Member wajib mengganti <strong>' + judul + '</strong> dengan judul yang sama. Tidak ada denda uang.';
+    } else if (kondisi === 'hilang') {
+        notice.style.display = 'block';
+        notice.style.background = 'rgba(239,68,68,0.12)';
+        notice.style.border = '1px solid rgba(239,68,68,0.25)';
+        notice.style.color = '#fca5a5';
+        notice.innerHTML = '✕ Member wajib mengganti <strong>' + judul + '</strong> dengan judul yang sama. Tidak ada denda uang.';
+    } else {
+        notice.style.display = 'none';
+    }
+}
+</script>
+@endpush
 @endsection

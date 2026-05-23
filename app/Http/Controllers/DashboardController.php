@@ -22,7 +22,7 @@ class DashboardController extends Controller
     $totalBuku            = Buku::sum('jumlah');
     $totalMember          = User::where('jenis', 'member')->count();
     $totalPeminjamanAktif = Pinjam::where('status', 'pinjam')->count();
-    $totalDenda           = Pengembalian::sum('total_denda');
+    $totalDenda = Pengembalian::where('status_denda', 'belum_lunas')->sum('total_denda');
 
     // Chart data
     $peminjamanPerBulan = Pinjam::selectRaw('MONTH(tgl_pinjam) as bulan, YEAR(tgl_pinjam) as tahun, COUNT(*) as total')
@@ -81,9 +81,33 @@ $recentActivity = $recentPinjam->concat($recentKembali)
         ->take(5)
         ->get();
 
+    // Notifikasi peminjaman
+$notifikasi = \App\Models\DetailPinjam::with(['pinjam.user', 'buku'])
+    ->whereHas('pinjam', fn($q) => $q->where('status', 'pinjam'))
+    ->where(function($q) {
+        $q->where('tgl_kembali_estimasi', '<', now()->toDateString())
+          ->orWhereBetween('tgl_kembali_estimasi', [
+              now()->toDateString(),
+              now()->addDays(1)->toDateString()
+          ]);
+    })
+    ->get()
+    ->map(fn($dp) => [
+        'nama'    => $dp->pinjam->user->nama,
+        'judul'   => $dp->buku->judul,
+        'tgl'     => $dp->tgl_kembali_estimasi,
+        'sisa'    => now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($dp->tgl_kembali_estimasi)->startOfDay(), false),
+        'type'    => \Carbon\Carbon::parse($dp->tgl_kembali_estimasi)->isPast() ? 'terlambat' : 'hampir',
+    ])
+    ->sortBy('sisa')
+    ->values();
+
+$notifCount = $notifikasi->count();
+
     return view('dashboard', compact(
-        'totalBuku', 'totalMember', 'totalPeminjamanAktif', 'totalDenda',
-        'labels', 'data', 'recentActivity', 'pinjamanTerlambat'
+    'totalBuku', 'totalMember', 'totalPeminjamanAktif', 'totalDenda',
+    'labels', 'data', 'recentActivity', 'pinjamanTerlambat',
+    'notifikasi', 'notifCount'
     ));
 }
 
@@ -105,9 +129,32 @@ $recentActivity = $recentPinjam->concat($recentKembali)
         // 4 buku terbaru
         $bukuTerbaru = Buku::with('kategori')->latest()->take(4)->get();
 
+        // Notifikasi untuk member
+$notifikasi = \App\Models\DetailPinjam::with(['pinjam', 'buku'])
+    ->whereHas('pinjam', fn($q) => $q->where('status', 'pinjam')->where('user_id', $user->id))
+    ->where(function($q) {
+        $q->where('tgl_kembali_estimasi', '<', now()->toDateString())
+          ->orWhereBetween('tgl_kembali_estimasi', [
+              now()->toDateString(),
+              now()->addDays(1)->toDateString()
+          ]);
+    })
+    ->get()
+    ->map(fn($dp) => [
+        'nama'  => $dp->buku->judul,
+        'judul' => $dp->buku->judul,
+        'tgl'   => $dp->tgl_kembali_estimasi,
+        'sisa'  => now()->startOfDay()->diffInDays(\Carbon\Carbon::parse($dp->tgl_kembali_estimasi)->startOfDay(), false),
+        'type'  => \Carbon\Carbon::parse($dp->tgl_kembali_estimasi)->isPast() ? 'terlambat' : 'hampir',
+    ])
+    ->sortBy('sisa')
+    ->values();
+
+$notifCount = $notifikasi->count();
+
         return view('dashboard-member', compact(
-            'totalPinjaman', 'sedangDipinjam', 'sudahDikembalikan',
-            'pinjamanAktif', 'bukuTerbaru'
-        ));
+        'totalPinjaman', 'sedangDipinjam', 'sudahDikembalikan',
+        'pinjamanAktif', 'bukuTerbaru', 'notifikasi', 'notifCount'
+    ));
     }
 }

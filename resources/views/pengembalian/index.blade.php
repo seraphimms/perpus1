@@ -53,9 +53,31 @@
                     </div>
                 </td>
                 <td>{{ $item->tgl_kembali->format('d/m/Y') }}</td>
-                <td style="text-align:right;font-weight:600;{{ $item->total_denda > 0 ? 'color:#fca5a5;' : 'color:rgba(255,255,255,0.50);' }}">
-                    Rp {{ number_format($item->total_denda, 0, ',', '.') }}
-                </td>
+                <td style="text-align:right;">
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">
+        @if($item->total_denda > 0)
+            <span style="font-weight:600;{{ $item->status_denda === 'lunas' ? 'color:rgba(255,255,255,0.30);text-decoration:line-through;' : 'color:#fca5a5;' }}">
+                Rp {{ number_format($item->total_denda, 0, ',', '.') }}
+            </span>
+            @if($item->status_denda === 'lunas')
+                <span style="background:rgba(52,211,153,0.15);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25);border-radius:20px;padding:2px 10px;font-size:11px;">
+                    Lunas
+                </span>
+            @else
+    <button type="button"
+        onclick="showKonfirmasi({{ $item->id }}, 'Rp {{ number_format($item->total_denda, 0, ',', '.') }}')"
+        style="background:rgba(52,211,153,0.15);color:#6ee7b7;border:1px solid rgba(52,211,153,0.25);border-radius:20px;padding:2px 10px;font-size:11px;cursor:pointer;">
+        Tandai Lunas
+    </button>
+    <form id="form-lunas-{{ $item->id }}" action="{{ route('pengembalian.lunas', $item) }}" method="POST" style="display:none;">
+        @csrf @method('PUT')
+    </form>
+@endif
+        @else
+            <span style="color:rgba(255,255,255,0.30);">Rp 0</span>
+        @endif
+    </div>
+</td>
                 <td style="text-align:center;">
                     <a href="{{ route('pengembalian.show',$item) }}"
                        style="font-size:12.5px;color:#93c5fd;font-weight:500;text-decoration:none;">Detail</a>
@@ -74,4 +96,63 @@
     <div style="padding:14px 16px;border-top:1px solid rgba(255,255,255,0.07);">{{ $pengembalian->links() }}</div>
     @endif
 </div>
+{{-- Modal Konfirmasi Lunas --}}
+<div id="modalLunas" onclick="closeModalLunas()"
+     style="display:none;position:fixed;inset:0;z-index:50;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+    <div onclick="event.stopPropagation()"
+         style="background:#1e2a45;border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:28px;width:100%;max-width:380px;margin:16px;text-align:center;">
+
+        <div style="width:52px;height:52px;background:rgba(52,211,153,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <svg style="width:26px;height:26px;color:#6ee7b7;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+        </div>
+
+        <h3 style="color:white;font-size:16px;font-weight:600;margin-bottom:8px;">Tandai Denda Lunas?</h3>
+        <p style="color:rgba(255,255,255,0.45);font-size:13px;margin-bottom:6px;">Denda sebesar</p>
+        <p id="modalDendaAmount" style="color:#6ee7b7;font-size:20px;font-weight:700;margin-bottom:16px;"></p>
+        <p style="color:rgba(255,255,255,0.35);font-size:12px;margin-bottom:24px;">akan ditandai sudah dibayar. Data denda tetap tersimpan.</p>
+
+        <div style="display:flex;gap:10px;justify-content:center;">
+            <button onclick="closeModalLunas()" class="btn-secondary"
+                    style="padding:9px 22px;border-radius:10px;font-size:13px;cursor:pointer;">
+                Batal
+            </button>
+            <button id="btnKonfirmasiLunas" onclick="submitLunas()"
+                    style="background:linear-gradient(135deg,#10b981,#34d399);color:white;border:none;padding:9px 22px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;">
+                Ya, Tandai Lunas
+            </button>
+        </div>
+    </div>
+</div>
+
+@push('scripts')
+<script>
+let currentFormId = null;
+
+function showKonfirmasi(id, amount) {
+    currentFormId = id;
+    document.getElementById('modalDendaAmount').textContent = amount;
+    document.getElementById('modalLunas').style.display = 'flex';
+}
+
+function closeModalLunas() {
+    document.getElementById('modalLunas').style.display = 'none';
+    currentFormId = null;
+}
+
+function submitLunas() {
+    if (currentFormId) {
+        const form = document.getElementById('form-lunas-' + currentFormId);
+        if (form) {
+            form.submit();
+        } else {
+            console.log('Form tidak ditemukan: form-lunas-' + currentFormId);
+        }
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeModalLunas();
+});
+</script>
+@endpush
 @endsection

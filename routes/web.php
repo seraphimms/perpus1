@@ -33,6 +33,10 @@ Route::middleware(['auth'])->group(function () {
         // Kategori CRUD
         Route::resource('kategori', KategoriController::class)->except(['show']);
 
+        Route::get('/buku/import', [BukuController::class, 'importForm'])->name('buku.import.form');
+        Route::post('/buku/import', [BukuController::class, 'import'])->name('buku.import');
+        Route::get('/buku/template', [BukuController::class, 'downloadTemplate'])->name('buku.template');
+
         // Buku CRUD (admin tambah/edit/hapus)
         Route::get('/buku/create', [BukuController::class, 'create'])->name('buku.create');
         Route::post('/buku', [BukuController::class, 'store'])->name('buku.store');
@@ -54,12 +58,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/pengembalian/create', [PengembalianController::class, 'create'])->name('pengembalian.create');
         Route::post('/pengembalian', [PengembalianController::class, 'store'])->name('pengembalian.store');
         Route::get('/pengembalian/{pengembalian}', [PengembalianController::class, 'show'])->name('pengembalian.show');
+        Route::put('/pengembalian/{pengembalian}/lunas', [PengembalianController::class, 'tandaiLunas'])->name('pengembalian.lunas');
+        Route::put('/pengembalian/detail/{detail}/penggantian', [PengembalianController::class, 'updatePenggantian'])->name('pengembalian.penggantian');
 
         // Laporan
         Route::get('/laporan/pinjam', [LaporanController::class, 'pinjam'])->name('laporan.pinjam');
         Route::get('/laporan/pinjam/pdf', [LaporanController::class, 'pinjamPdf'])->name('laporan.pinjam.pdf');
         Route::get('/laporan/pengembalian', [LaporanController::class, 'pengembalian'])->name('laporan.pengembalian');
         Route::get('/laporan/pengembalian/pdf', [LaporanController::class, 'pengembalianPdf'])->name('laporan.pengembalian.pdf');
+        Route::get('/laporan/pinjam/excel', [LaporanController::class, 'pinjamExcel'])->name('laporan.pinjam.excel');
+        Route::get('/laporan/pengembalian/excel', [LaporanController::class, 'pengembalianExcel'])->name('laporan.pengembalian.excel');
     });
 });
 

@@ -145,10 +145,77 @@
                 <h1 style="color:white;font-size:17px;font-weight:600;">@yield('title', 'Dashboard')</h1>
                 @hasSection('subtitle')<p style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:1px;">@yield('subtitle')</p>@endif
             </div>
-            <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.40);font-size:12px;">
-                <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                {{ now()->locale('id')->isoFormat('dddd, D MMMM Y') }}
+            <div style="display:flex;align-items:center;gap:12px;">
+    {{-- Bell Notifikasi --}}
+    <div style="position:relative;">
+        <button onclick="toggleNotif()" id="bellBtn"
+                style="width:36px;height:36px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;">
+            <svg style="width:18px;height:18px;color:rgba(255,255,255,0.70);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+            @if(isset($notifCount) && $notifCount > 0)
+            <span style="position:absolute;top:-4px;right:-4px;width:16px;height:16px;background:#ef4444;border-radius:50%;font-size:10px;font-weight:600;color:white;display:flex;align-items:center;justify-content:center;">
+                {{ $notifCount > 9 ? '9+' : $notifCount }}
+            </span>
+            @endif
+        </button>
+
+        {{-- Dropdown Notifikasi --}}
+        <div id="notifDropdown"
+             style="display:none;position:absolute;right:0;top:44px;width:340px;background:#1e2a45;border:1px solid rgba(255,255,255,0.10);border-radius:14px;overflow:hidden;z-index:100;">
+
+            <div style="padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.07);display:flex;align-items:center;justify-content:space-between;">
+                <p style="color:white;font-size:13px;font-weight:600;">Notifikasi</p>
+                @if(isset($notifCount) && $notifCount > 0)
+                <span style="background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.25);border-radius:20px;padding:2px 8px;font-size:11px;">
+                    {{ $notifCount }} belum dibaca
+                </span>
+                @endif
             </div>
+
+            @if(isset($notifikasi) && $notifikasi->count() > 0)
+                @foreach($notifikasi->take(5) as $notif)
+                <div style="padding:12px 16px;border-bottom:0.5px solid rgba(255,255,255,0.05);display:flex;align-items:flex-start;gap:10px;">
+                    <div style="width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+                        {{ $notif['type'] === 'terlambat' ? 'background:rgba(239,68,68,0.15);' : 'background:rgba(245,158,11,0.15);' }}">
+                        <svg style="width:15px;height:15px;{{ $notif['type'] === 'terlambat' ? 'color:#fca5a5;' : 'color:#fbbf24;' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <div style="flex:1;min-width:0;">
+                        @if(auth()->user()->isAdmin())
+                        <p style="color:white;font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $notif['nama'] }}</p>
+                        @endif
+                        <p style="color:rgba(255,255,255,0.55);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;{{ auth()->user()->isAdmin() ? 'margin-top:1px;' : 'color:white;font-weight:500;' }}">{{ $notif['judul'] }}</p>
+                        <p style="color:rgba(255,255,255,0.30);font-size:10px;margin-top:2px;">
+                            Jatuh tempo: {{ \Carbon\Carbon::parse($notif['tgl'])->locale('id')->isoFormat('D MMM Y') }}
+                        </p>
+                    </div>
+                    <span style="border-radius:20px;padding:2px 8px;font-size:10px;flex-shrink:0;
+                        {{ $notif['type'] === 'terlambat' ? 'background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.25);' : 'background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.25);' }}">
+                        {{ $notif['type'] === 'terlambat' ? abs($notif['sisa']).' hari telat' : $notif['sisa'].' hari lagi' }}
+                    </span>
+                </div>
+                @endforeach
+
+                <div style="padding:10px 16px;text-align:center;">
+                    <a href="{{ route('pinjam.index') }}" style="color:#93c5fd;font-size:12px;text-decoration:none;">
+                        Lihat semua peminjaman →
+                    </a>
+                </div>
+            @else
+                <div style="padding:24px;text-align:center;">
+                    <svg style="width:28px;height:28px;color:rgba(255,255,255,0.20);margin:0 auto 8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    <p style="color:rgba(255,255,255,0.30);font-size:12px;">Semua peminjaman on time!</p>
+                </div>
+            @endif
+        </div>
+    </div>
+
+    {{-- Tanggal --}}
+    <div style="display:flex;align-items:center;gap:6px;color:rgba(255,255,255,0.40);font-size:12px;">
+        <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        {{ now()->locale('id')->isoFormat('dddd, D MMMM Y') }}
+    </div>
+</div>
         </header>
 
         {{-- Flash Messages --}}
@@ -175,7 +242,20 @@
         </main>
     </div>
 </div>
+<script>
+function toggleNotif() {
+    const d = document.getElementById('notifDropdown');
+    d.style.display = d.style.display === 'none' ? 'block' : 'none';
+}
 
+document.addEventListener('click', function(e) {
+    const btn = document.getElementById('bellBtn');
+    const dropdown = document.getElementById('notifDropdown');
+    if (btn && dropdown && !btn.contains(e.target) && !dropdown.contains(e.target)) {
+        dropdown.style.display = 'none';
+    }
+});
+</script>
 @stack('scripts')
 </body>
 </html>

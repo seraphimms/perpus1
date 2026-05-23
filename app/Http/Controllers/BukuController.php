@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Buku;
 use App\Models\Kategori;
+use App\Imports\BukuImport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
@@ -116,4 +118,49 @@ class BukuController extends Controller
         $buku->delete();
         return redirect()->route('buku.index')->with('success', 'Buku berhasil dihapus.');
     }
+    public function importForm()
+{
+    return view('buku.import');
+}
+
+public function import(Request $request)
+{
+    $request->validate([
+        'file' => 'required|file|mimes:xlsx,csv|max:5120',
+    ], [
+        'file.required' => 'File wajib dipilih.',
+        'file.mimes'    => 'Format file harus .xlsx atau .csv.',
+        'file.max'      => 'Ukuran file maksimal 5MB.',
+    ]);
+
+    $import = new BukuImport();
+    Excel::import($import, $request->file('file'));
+
+    $msg = "Import selesai! {$import->importedCount} buku berhasil ditambahkan.";
+    if ($import->skippedCount > 0) {
+        $msg .= " {$import->skippedCount} baris dilewati (kategori tidak ditemukan atau data tidak lengkap).";
+    }
+
+    return redirect()->route('buku.index')->with('success', $msg);
+}
+
+public function downloadTemplate()
+{
+    $headers = [
+        'Content-Type'        => 'text/csv',
+        'Content-Disposition' => 'attachment; filename="template_import_buku.csv"',
+    ];
+
+    $columns  = ['judul', 'penulis', 'penerbit', 'tahun', 'isbn', 'jumlah', 'kategori'];
+    $contoh   = ['Contoh Judul Buku', 'Nama Penulis', 'Nama Penerbit', '2024', '978-xxx-xxx', '5', 'Fiksi'];
+
+    $callback = function () use ($columns, $contoh) {
+        $file = fopen('php://output', 'w');
+        fputcsv($file, $columns);
+        fputcsv($file, $contoh);
+        fclose($file);
+    };
+
+    return response()->stream($callback, 200, $headers);
+}
 }

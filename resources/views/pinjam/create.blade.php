@@ -75,6 +75,12 @@
                         </select>
                         @error('user_id')<p style="margin-top:5px;font-size:12px;color:#fca5a5;">{{ $message }}</p>@enderror
                     </div>
+                    @error('user_id')<p style="margin-top:5px;font-size:12px;color:#fca5a5;">{{ $message }}</p>@enderror
+
+                    <div id="warningPinjamAktif" style="display:none;margin-top:8px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.25);border-radius:8px;padding:10px 12px;align-items:center;gap:8px;">
+                        <svg style="width:16px;height:16px;color:#fbbf24;flex-shrink:0;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                        <p style="color:#fde68a;font-size:12px;">Member ini masih memiliki pinjaman aktif yang belum dikembalikan. Pastikan sudah dikonfirmasi sebelum meminjam lagi.</p>
+                    </div>
                     <div>
                         <label style="display:block;color:rgba(255,255,255,0.70);font-size:13px;font-weight:500;margin-bottom:7px;">Tanggal Pinjam <span style="color:#f87171;">*</span></label>
                         <input type="date" name="tgl_pinjam" value="{{ old('tgl_pinjam', date('Y-m-d')) }}"
@@ -120,10 +126,13 @@
                                            class="glass-input" style="width:100%;border-radius:9px;padding:8px 10px;font-size:13px;box-sizing:border-box;">
                                 </div>
                                 <div style="flex:1;">
-                                    <label style="display:block;color:rgba(255,255,255,0.55);font-size:12px;font-weight:500;margin-bottom:6px;">Est. Tgl Kembali <span style="color:#f87171;">*</span></label>
-                                    <input type="date" :name="`buku[${index}][tgl_kembali_estimasi]`" x-model="item.tgl_kembali"
-                                           class="glass-input" style="width:100%;border-radius:9px;padding:8px 10px;font-size:13px;box-sizing:border-box;">
+                                    <label style="display:block;color:rgba(255,255,255,0.55);font-size:12px;font-weight:500;margin-bottom:6px;">Est. Tgl Kembali</label>
+                                    <input type="hidden" :name="`buku[${index}][tgl_kembali_estimasi]`" :value="item.tgl_kembali">
+                                    <div class="glass-input" style="width:100%;border-radius:9px;padding:8px 10px;font-size:13px;box-sizing:border-box;color:rgba(255,255,255,0.60);">
+                                    <span x-text="item.tgl_kembali ? new Date(item.tgl_kembali).toLocaleDateString('id-ID', {day:'2-digit',month:'short',year:'numeric'}) : '-'"></span>
+                                    <span style="font-size:11px;color:rgba(255,255,255,0.35);margin-left:6px;">(3 hari)</span>
                                 </div>
+                            </div>
                                 <button type="button" @click="hapusBuku(index)" x-show="items.length > 1"
                                         style="flex-shrink:0;width:32px;height:32px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.25);border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fca5a5;margin-bottom:2px;">
                                     <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -146,12 +155,24 @@
 <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
 <script>
 // Init select anggota
-new Choices(document.getElementById('selectAnggota'), {
+const memberPinjamAktif = {!! json_encode($memberPinjamAktif) !!};
+
+const choicesAnggota = new Choices(document.getElementById('selectAnggota'), {
     searchEnabled: true,
     searchPlaceholderValue: 'Cari nama anggota...',
     noResultsText: 'Anggota tidak ditemukan',
     itemSelectText: '',
     shouldSort: false,
+});
+
+document.getElementById('selectAnggota').addEventListener('change', function() {
+    const userId = parseInt(this.value);
+    const warning = document.getElementById('warningPinjamAktif');
+    if (memberPinjamAktif.includes(userId)) {
+        warning.style.display = 'flex';
+    } else {
+        warning.style.display = 'none';
+    }
 });
 
 // Fungsi init select buku (dipanggil tiap kali baris baru ditambah)
@@ -168,11 +189,32 @@ function initBukuSelect(el) {
 function pinjamForm() {
     return {
         items: [{ jumlah: 1, tgl_kembali: '' }],
+        tglPinjam: '{{ date('Y-m-d') }}',
         tambahBuku() {
-            this.items.push({ jumlah: 1, tgl_kembali: '' });
+            this.items.push({ jumlah: 1, tgl_kembali: this.hitungTglKembali() });
         },
         hapusBuku(index) {
             this.items.splice(index, 1);
+        },
+        hitungTglKembali() {
+    const d = new Date(this.tglPinjam);
+    let count = 0;
+    while (count < 3) {
+        d.setDate(d.getDate() + 1);
+        const day = d.getDay();
+        if (day !== 0 && day !== 6) {
+            count++;
+        }
+    }
+    return d.toISOString().split('T')[0];
+},
+        init() {
+            this.tglPinjam = document.querySelector('[name=tgl_pinjam]').value;
+            this.items[0].tgl_kembali = this.hitungTglKembali();
+            document.querySelector('[name=tgl_pinjam]').addEventListener('change', (e) => {
+                this.tglPinjam = e.target.value;
+                this.items.forEach(item => item.tgl_kembali = this.hitungTglKembali());
+            });
         }
     }
 }

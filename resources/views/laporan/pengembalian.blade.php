@@ -28,13 +28,18 @@
             </a>
             @endif
         </div>
-        <div style="margin-left:auto;">
-            <a href="{{ route('laporan.pengembalian.pdf', request()->all()) }}"
-               style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:9px;font-size:13px;text-decoration:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;font-weight:500;box-shadow:0 4px 12px rgba(239,68,68,0.25);">
-                <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Export PDF
-            </a>
-        </div>
+            <div style="margin-left:auto;display:flex;gap:8px;">
+        <a href="{{ route('laporan.pengembalian.excel', request()->all()) }}"
+        style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:9px;font-size:13px;text-decoration:none;background:linear-gradient(135deg,#10b981,#059669);color:white;font-weight:500;">
+            <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Export Excel
+        </a>
+        <a href="{{ route('laporan.pengembalian.pdf', request()->all()) }}"
+        style="display:inline-flex;align-items:center;gap:7px;padding:9px 18px;border-radius:9px;font-size:13px;text-decoration:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:white;font-weight:500;">
+            <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+            Export PDF
+        </a>
+</div>
     </form>
 </div>
 

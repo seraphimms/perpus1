@@ -11,28 +11,26 @@ use Illuminate\Support\Facades\DB;
 class PengembalianController extends Controller
 {
     private const DENDA_PER_HARI = 1000;
-    private const DENDA_RUSAK = 50000;
-    private const DENDA_HILANG = 150000;
 
     public function index(Request $request)
     {
         $query = Pengembalian::with(['pinjam.user']);
 
-    if ($request->filled('search')) {
-        $query->whereHas('pinjam.user', fn($q) => $q->where('nama', 'like', '%' . $request->search . '%'));
-    }
+        if ($request->filled('search')) {
+            $query->whereHas('pinjam.user', fn($q) => $q->where('nama', 'like', '%' . $request->search . '%'));
+        }
 
-    if ($request->filled('dari')) {
-        $query->whereDate('tgl_kembali', '>=', $request->dari);
-    }
+        if ($request->filled('dari')) {
+            $query->whereDate('tgl_kembali', '>=', $request->dari);
+        }
 
-    if ($request->filled('sampai')) {
-        $query->whereDate('tgl_kembali', '<=', $request->sampai);
-    }
+        if ($request->filled('sampai')) {
+            $query->whereDate('tgl_kembali', '<=', $request->sampai);
+        }
 
-    $pengembalian = $query->latest()->paginate(10)->withQueryString();
-    return view('pengembalian.index', compact('pengembalian'));
-}
+        $pengembalian = $query->latest()->paginate(10)->withQueryString();
+        return view('pengembalian.index', compact('pengembalian'));
+    }
 
     public function create(Request $request)
     {
@@ -53,22 +51,23 @@ class PengembalianController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'pinjam_id' => 'required|exists:pinjam,id',
-            'tgl_kembali' => 'required|date',
-            'detail' => 'required|array|min:1',
-            'detail.*.detail_pinjam_id' => 'required|exists:detail_pinjam,id',
-            'detail.*.kondisi_buku' => 'required|in:baik,rusak,hilang',
+            'pinjam_id'                      => 'required|exists:pinjam,id',
+            'tgl_kembali'                    => 'required|date',
+            'detail'                         => 'required|array|min:1',
+            'detail.*.detail_pinjam_id'      => 'required|exists:detail_pinjam,id',
+            'detail.*.kondisi_buku'          => 'required|in:baik,rusak,hilang',
         ]);
 
         DB::beginTransaction();
         try {
-            $pinjam = Pinjam::with('detailPinjam.buku')->findOrFail($request->pinjam_id);
+            $pinjam     = Pinjam::with('detailPinjam.buku')->findOrFail($request->pinjam_id);
             $tglKembali = \Carbon\Carbon::parse($request->tgl_kembali);
 
             $pengembalian = Pengembalian::create([
-                'pinjam_id' => $pinjam->id,
-                'tgl_kembali' => $tglKembali,
-                'total_denda' => 0,
+                'pinjam_id'    => $pinjam->id,
+                'tgl_kembali'  => $tglKembali,
+                'total_denda'  => 0,
+                'status_denda' => 'belum_lunas',
             ]);
 
             $totalDenda = 0;
@@ -79,36 +78,36 @@ class PengembalianController extends Controller
                 if (!$detailPinjam) continue;
 
                 $tglEstimasi = \Carbon\Carbon::parse($detailPinjam->tgl_kembali_estimasi);
-                $denda = 0;
+                $denda       = 0;
 
-                // Denda keterlambatan
+                // Denda keterlambatan — hanya hari kerja (Senin-Jumat)
                 if ($tglKembali->gt($tglEstimasi)) {
-                    $hariTelat = $tglEstimasi->diffInDays($tglKembali);
-                    $denda += $hariTelat * self::DENDA_PER_HARI * $detailPinjam->jumlah;
+                $hariTelat = $this->hitungHariKerja($tglEstimasi, $tglKembali);
+                $denda    += $hariTelat * self::DENDA_PER_HARI * $detailPinjam->jumlah;
                 }
 
-                // Denda kondisi buku
-                if ($item['kondisi_buku'] === 'rusak') {
-                    $denda += self::DENDA_RUSAK * $detailPinjam->jumlah;
-                } elseif ($item['kondisi_buku'] === 'hilang') {
-                    $denda += self::DENDA_HILANG * $detailPinjam->jumlah;
-                }
+                // Status penggantian
+                $statusPenggantian = in_array($item['kondisi_buku'], ['rusak', 'hilang'])
+                    ? 'belum_diganti'
+                    : 'tidak_perlu';
 
                 DetailPengembalian::create([
-                    'pengembalian_id' => $pengembalian->id,
-                    'detail_pinjam_id' => $detailPinjam->id,
+                    'pengembalian_id'    => $pengembalian->id,
+                    'detail_pinjam_id'   => $detailPinjam->id,
                     'tgl_kembali_aktual' => $tglKembali,
-                    'kondisi_buku' => $item['kondisi_buku'],
-                    'denda' => $denda,
+                    'kondisi_buku'       => $item['kondisi_buku'],
+                    'denda'              => $denda,
+                    'status_penggantian' => $statusPenggantian,
                 ]);
 
-                // Kembalikan stok buku (hanya jika tidak hilang)
-                if ($item['kondisi_buku'] !== 'hilang') {
-                    $detailPinjam->buku->increment('jumlah', $detailPinjam->jumlah);
+                // Hanya kondisi baik yang langsung nambah stok
+                // Rusak & hilang: stok baru bertambah saat sudah diganti
+                if ($item['kondisi_buku'] === 'baik') {
+                $detailPinjam->buku->increment('jumlah', $detailPinjam->jumlah);
                 }
 
                 $totalDenda += $denda;
-            }
+                }
 
             $pengembalian->update(['total_denda' => $totalDenda]);
             $pinjam->update(['status' => 'kembali']);
@@ -126,4 +125,47 @@ class PengembalianController extends Controller
         $pengembalian->load(['pinjam.user', 'detailPengembalian.detailPinjam.buku']);
         return view('pengembalian.show', compact('pengembalian'));
     }
+
+    public function updatePenggantian(Request $request, DetailPengembalian $detail)
+    {
+        $request->validate([
+            'status_penggantian' => 'required|in:belum_diganti,sudah_diganti',
+        ]);
+
+        // Rusak & hilang: stok bertambah saat sudah diganti
+        if (
+        $request->status_penggantian === 'sudah_diganti' &&
+        $detail->status_penggantian === 'belum_diganti' &&
+        in_array($detail->kondisi_buku, ['rusak', 'hilang'])
+        ) {
+        $detail->detailPinjam->buku->increment('jumlah', $detail->detailPinjam->jumlah);
+        }
+
+        $detail->update(['status_penggantian' => $request->status_penggantian]);
+
+       return back()->with('success', 'Status penggantian berhasil diperbarui.' .
+    ($request->status_penggantian === 'sudah_diganti' ? ' Stok buku telah ditambahkan.' : '')
+);
+    }
+
+    public function tandaiLunas(Pengembalian $pengembalian)
+    {
+        $pengembalian->update(['status_denda' => 'lunas']);
+        return back()->with('success', 'Denda berhasil ditandai lunas.');
+    }
+    private function hitungHariKerja(\Carbon\Carbon $dari, \Carbon\Carbon $sampai): int
+{
+    $hariKerja = 0;
+    $current   = $dari->copy()->addDay();
+
+    while ($current->lte($sampai)) {
+        // 1 = Senin, 5 = Jumat, 6 = Sabtu, 7 = Minggu
+        if ($current->dayOfWeek !== 0 && $current->dayOfWeek !== 6) {
+            $hariKerja++;
+        }
+        $current->addDay();
+    }
+
+    return $hariKerja;
+}
 }
