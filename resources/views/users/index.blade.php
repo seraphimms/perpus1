@@ -2,7 +2,7 @@
 @section('title', 'Manajemen User')
 
 @section('content')
-<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
+<div class="page-header-row" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
     <form action="{{ route('users.index') }}" method="GET" style="display:flex;flex-wrap:wrap;gap:8px;">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau email..."
                class="glass-input" style="border-radius:10px;padding:8px 14px;font-size:13px;width:210px;">
@@ -25,13 +25,13 @@
 </div>
 
 <div class="glass" style="border-radius:16px;overflow:hidden;">
-    <table class="glass-table" style="width:100%;border-collapse:collapse;">
+    <div class="table-responsive"><table class="glass-table" style="width:100%;border-collapse:collapse;">
         <thead>
             <tr>
                 <th style="width:36px;">#</th>
                 <th>Nama</th>
-                <th>Email</th>
-                <th>Telepon</th>
+                <th class="hide-mobile">Email</th>
+                <th class="hide-mobile">Telepon</th>
                 <th style="text-align:center;">Role</th>
                 <th style="text-align:center;">Aksi</th>
             </tr>
@@ -48,8 +48,8 @@
                         <span style="color:white;font-weight:500;">{{ $user->nama }}</span>
                     </div>
                 </td>
-                <td>{{ $user->email }}</td>
-                <td>{{ $user->telepon ?? '—' }}</td>
+                <td class="hide-mobile">{{ $user->email }}</td>
+                <td class="hide-mobile">{{ $user->telepon ?? '—' }}</td>
                 <td style="text-align:center;">
                     <span class="{{ $user->jenis === 'admin' ? 'badge-purple' : 'badge-green' }}"
                           style="display:inline-block;padding:3px 12px;border-radius:20px;font-size:12px;font-weight:500;">
@@ -75,7 +75,7 @@
             </tr>
             @endforelse
         </tbody>
-    </table>
+    </table></div>
     @if($users->hasPages())
     <div style="padding:14px 16px;border-top:1px solid rgba(255,255,255,0.07);">{{ $users->links() }}</div>
     @endif

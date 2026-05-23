@@ -177,3 +177,199 @@
 
 /* ── Page transition ── */
 body { transition: opacity 0.15s; }
+
+/* ══════════════════════════════════════
+   RESPONSIVE STYLES
+   ══════════════════════════════════════ */
+
+/* Sidebar sebagai drawer di mobile */
+.sidebar-drawer {
+    width: 248px;
+    transition: transform 0.3s ease;
+}
+
+/* Overlay gelap saat sidebar terbuka di mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    z-index: 40;
+    backdrop-filter: blur(2px);
+}
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* Tombol hamburger — sembunyi di desktop */
+.hamburger-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.80);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+.hamburger-btn:hover { background: rgba(255,255,255,0.14); }
+
+/* Tombol close sidebar — sembunyi di desktop */
+.sidebar-close-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: rgba(255,255,255,0.70);
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+.sidebar-close-btn:hover { background: rgba(255,255,255,0.14); }
+
+/* Topbar padding */
+.topbar-responsive {
+    padding: 0 28px;
+    height: 64px;
+}
+
+/* Main content padding */
+.main-content-padding {
+    padding: 24px 28px;
+}
+
+/* Tabel responsif — bungkus dengan scroll horizontal */
+.table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ── TABLET (≤ 1024px) ── */
+@media (max-width: 1024px) {
+    .sidebar-drawer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100%;
+        z-index: 50;
+        transform: translateX(-100%);
+    }
+    .sidebar-drawer.open {
+        transform: translateX(0);
+        box-shadow: 4px 0 32px rgba(0,0,0,0.50);
+    }
+    .hamburger-btn {
+        display: flex;
+    }
+    .sidebar-close-btn {
+        display: flex;
+    }
+    .topbar-date {
+        display: none;
+    }
+}
+
+/* ── MOBILE (≤ 640px) ── */
+@media (max-width: 640px) {
+    .topbar-responsive {
+        padding: 0 16px;
+        height: 56px;
+    }
+    .main-content-padding {
+        padding: 16px;
+    }
+    /* Stat cards: 2 kolom di mobile */
+    .stat-grid-responsive {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 10px !important;
+    }
+    /* Quick access + chart: stack vertikal */
+    .dashboard-bottom-grid {
+        grid-template-columns: 1fr !important;
+    }
+    /* Form filter: full width */
+    .filter-form-responsive {
+        width: 100%;
+    }
+    .filter-form-responsive input,
+    .filter-form-responsive select {
+        width: 100% !important;
+        min-width: unset !important;
+        box-sizing: border-box;
+    }
+    /* Sembunyikan kolom tabel yang tidak penting */
+    .hide-mobile {
+        display: none !important;
+    }
+    /* Padding card lebih kecil */
+    .card-padding-mobile {
+        padding: 12px !important;
+    }
+    /* Font ukuran stat angka */
+    .stat-value-mobile {
+        font-size: 22px !important;
+    }
+    /* Button full width di mobile */
+    .btn-full-mobile {
+        width: 100%;
+        justify-content: center;
+    }
+    /* Page header action row */
+    .page-header-row {
+        flex-direction: column;
+        align-items: stretch !important;
+    }
+    .page-header-row > * {
+        width: 100%;
+    }
+}
+
+/* ── SANGAT KECIL (≤ 380px) ── */
+@media (max-width: 380px) {
+    .stat-grid-responsive {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ── Dashboard Member responsive ── */
+@media (max-width: 640px) {
+    .dashboard-bottom-grid {
+        grid-template-columns: 1fr !important;
+    }
+    /* stat 3 kolom → 2 kolom */
+    .stat-grid-responsive {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+
+/* ── Form create/edit responsive ── */
+@media (max-width: 640px) {
+    .form-card-responsive {
+        padding: 16px !important;
+        border-radius: 12px !important;
+    }
+    .form-grid-2col {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+/* ── Topbar notification bell hide on very small ── */
+@media (max-width: 380px) {
+    .topbar-notif { display: none !important; }
+}
+
+/* ── Notifikasi dropdown responsive ── */
+@media (max-width: 640px) {
+    .notif-dropdown-responsive {
+        width: calc(100vw - 32px) !important;
+        right: -8px !important;
+    }
+}

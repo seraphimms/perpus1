@@ -81,7 +81,7 @@
 </div>
 
 {{-- ── Row 2: Stat Cards ── --}}
-<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;">
+<div class="stat-grid-responsive" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;">
     <div class="stat-member">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
             <div style="width:42px;height:42px;background:linear-gradient(135deg,#3b82f6,#60a5fa);border-radius:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(59,130,246,0.40);">
@@ -115,7 +115,7 @@
 </div>
 
 {{-- ── Row 3: Pinjaman Aktif + Buku Terbaru ── --}}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+<div class="dashboard-bottom-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
 
     {{-- Pinjaman Aktif --}}
     <div class="member-card" style="border-radius:16px;padding:20px;">

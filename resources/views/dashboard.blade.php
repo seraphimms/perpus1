@@ -96,7 +96,7 @@
 @section('content')
 
 {{-- ── Row 1: Stat Cards ── --}}
-<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;">
+<div class="stat-grid-responsive" style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:14px;">
 
     <div class="stat-card-new" style="padding:20px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
@@ -144,7 +144,7 @@
 </div>
 
 {{-- ── Row 2: Quick Access + Chart + Recent Activity ── --}}
-<div style="display:grid;grid-template-columns:220px 1fr 260px;gap:12px;">
+<div class="dashboard-bottom-grid" style="display:grid;grid-template-columns:220px 1fr 260px;gap:12px;">
 
     {{-- Quick Access --}}
     <div class="dash-card" style="border-radius:14px;padding:16px;">

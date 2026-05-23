@@ -13,7 +13,7 @@
 </div>
 
 <div class="glass" style="border-radius:16px;overflow:hidden;">
-    <table class="glass-table" style="width:100%;border-collapse:collapse;">
+    <div class="table-responsive"><table class="glass-table" style="width:100%;border-collapse:collapse;">
         <thead>
             <tr>
                 <th style="width:40px;">#</th>
@@ -54,7 +54,7 @@
             </tr>
             @endforelse
         </tbody>
-    </table>
+    </table></div>
     @if($kategori->hasPages())
     <div style="padding:14px 16px;border-top:1px solid rgba(255,255,255,0.07);">{{ $kategori->links() }}</div>
     @endif

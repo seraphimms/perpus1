@@ -3,11 +3,11 @@
 @section('title', auth()->user()->isAdmin() ? 'Manajemen Buku' : 'Katalog Buku')
 
 @section('content')
-<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
+<div class="page-header-row" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
     <form action="{{ route('buku.index') }}" method="GET" style="display:flex;flex-wrap:wrap;gap:8px;">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari judul, penulis, ISBN..."
-               class="glass-input" style="border-radius:10px;padding:8px 14px;font-size:13px;width:220px;">
-        <select name="kategori_id" class="glass-select" style="border-radius:10px;padding:8px 14px;font-size:13px;min-width:160px;">
+               class="glass-input filter-form-responsive" style="border-radius:10px;padding:8px 14px;font-size:13px;width:220px;">
+        <select name="kategori_id" class="glass-select filter-form-responsive" style="border-radius:10px;padding:8px 14px;font-size:13px;min-width:160px;">
             <option value="">Semua Kategori</option>
             @foreach($kategori as $k)
             <option value="{{ $k->id }}" {{ request('kategori_id') == $k->id ? 'selected' : '' }}>{{ $k->nama }}</option>
@@ -36,14 +36,14 @@
 </div>
 
 <div class="glass" style="border-radius:16px;overflow:hidden;">
-    <table class="glass-table" style="width:100%;border-collapse:collapse;">
+    <div class="table-responsive"><table class="glass-table" style="width:100%;border-collapse:collapse;">
         <thead>
             <tr>
                 <th style="width:36px;">#</th>
                 <th>Judul</th>
                 <th>Penulis</th>
-                <th>Kategori</th>
-                <th style="text-align:center;">Tahun</th>
+                <th class="hide-mobile">Kategori</th>
+                <th class="hide-mobile" style="text-align:center;">Tahun</th>
                 <th style="text-align:center;">Stok</th>
                 @if(auth()->user()->isAdmin())
                 <th style="text-align:center;">Proses</th>
@@ -83,11 +83,11 @@
                         </div>
                     </div>
                 </td>
-                <td>{{ $item->penulis }}</td>
+                <td class="hide-mobile">{{ $item->penulis }}</td>
                 <td>
                     <span class="badge-blue" style="display:inline-block;padding:3px 10px;border-radius:20px;font-size:11.5px;">{{ $item->kategori->nama }}</span>
                 </td>
-                <td style="text-align:center;">{{ $item->tahun }}</td>
+                <td class="hide-mobile" style="text-align:center;">{{ $item->tahun }}</td>
                 <td style="text-align:center;">
                     <span class="{{ $item->jumlah > 0 ? 'badge-green' : 'badge-red' }}"
                           style="display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:50%;font-size:12px;font-weight:600;">
@@ -113,7 +113,7 @@
             </tr>
             @endforelse
         </tbody>
-    </table>
+    </table></div>
     @if($buku->hasPages())
     <div style="padding:14px 16px;border-top:1px solid rgba(255,255,255,0.07);">{{ $buku->links() }}</div>
     @endif

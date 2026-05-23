@@ -61,7 +61,7 @@
 
 {{-- Table --}}
 <div class="glass" style="border-radius:16px;overflow:hidden;">
-    <table class="glass-table" style="width:100%;border-collapse:collapse;">
+    <div class="table-responsive"><table class="glass-table" style="width:100%;border-collapse:collapse;">
         <thead>
             <tr>
                 <th style="width:36px;">#</th>
@@ -106,6 +106,6 @@
             </tr>
             @endforelse
         </tbody>
-    </table>
+    </table></div>
 </div>
 @endsection

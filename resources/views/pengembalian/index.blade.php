@@ -2,7 +2,7 @@
 @section('title', 'Transaksi Pengembalian')
 
 @section('content')
-<div style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
+<div class="page-header-row" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;">
     <form action="{{ route('pengembalian.index') }}" method="GET" style="display:flex;flex-wrap:wrap;gap:8px;">
     <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama anggota..."
            class="glass-input" style="border-radius:10px;padding:8px 14px;font-size:13px;width:180px;">
@@ -26,13 +26,13 @@
 </div>
 
 <div class="glass" style="border-radius:16px;overflow:hidden;">
-    <table class="glass-table" style="width:100%;border-collapse:collapse;">
+    <div class="table-responsive"><table class="glass-table" style="width:100%;border-collapse:collapse;">
         <thead>
             <tr>
                 <th style="width:36px;">#</th>
-                <th>No. Pinjam</th>
+                <th class="hide-mobile">No. Pinjam</th>
                 <th>Anggota</th>
-                <th>Tgl Kembali</th>
+                <th class="hide-mobile">Tgl Kembali</th>
                 <th style="text-align:right;">Total Denda</th>
                 <th style="text-align:center;">Aksi</th>
             </tr>
@@ -41,7 +41,7 @@
             @forelse($pengembalian as $i => $item)
             <tr>
                 <td style="color:rgba(255,255,255,0.30);">{{ $pengembalian->firstItem() + $i }}</td>
-                <td style="font-family:monospace;color:rgba(255,255,255,0.50);font-size:13px;">
+                <td class="hide-mobile" style="font-family:monospace;color:rgba(255,255,255,0.50);font-size:13px;">
                     #{{ str_pad($item->pinjam->id, 5, '0', STR_PAD_LEFT) }}
                 </td>
                 <td>
@@ -52,7 +52,7 @@
                         <span style="color:white;font-weight:500;">{{ $item->pinjam->user->nama }}</span>
                     </div>
                 </td>
-                <td>{{ $item->tgl_kembali->format('d/m/Y') }}</td>
+                <td class="hide-mobile">{{ $item->tgl_kembali->format('d/m/Y') }}</td>
                 <td style="text-align:right;">
     <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;">
         @if($item->total_denda > 0)
@@ -91,7 +91,7 @@
             </tr>
             @endforelse
         </tbody>
-    </table>
+    </table></div>
     @if($pengembalian->hasPages())
     <div style="padding:14px 16px;border-top:1px solid rgba(255,255,255,0.07);">{{ $pengembalian->links() }}</div>
     @endif
