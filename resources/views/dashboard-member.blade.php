@@ -56,13 +56,24 @@
         color: rgba(255,255,255,0.30);
         margin-bottom: 12px;
     }
+
+    /* ── Responsive dashboard member ── */
+    @media (max-width: 640px) {
+        .sapaan-row { flex-wrap: wrap; gap: 10px; }
+        .stat-grid-member { grid-template-columns: repeat(2, 1fr) !important; }
+        .bottom-grid-member { grid-template-columns: 1fr !important; }
+        .buku-grid-member { grid-template-columns: repeat(2, 1fr) !important; }
+    }
+    @media (max-width: 380px) {
+        .stat-grid-member { grid-template-columns: 1fr !important; }
+    }
 </style>
 @endpush
 
 @section('content')
 
 {{-- ── Row 1: Sapaan ── --}}
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;" class="sapaan-row">
     <div>
         <h2 style="color:white;font-size:20px;font-weight:700;">Selamat datang, {{ auth()->user()->nama }}! 👋</h2>
         <p style="color:rgba(255,255,255,0.40);font-size:13px;margin-top:3px;">{{ now()->locale('id')->isoFormat('dddd, D MMMM Y') }}</p>
@@ -81,7 +92,7 @@
 </div>
 
 {{-- ── Row 2: Stat Cards ── --}}
-<div class="stat-grid-responsive" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;">
+<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px;" class="stat-grid-member">
     <div class="stat-member">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
             <div style="width:42px;height:42px;background:linear-gradient(135deg,#3b82f6,#60a5fa);border-radius:11px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(59,130,246,0.40);">
@@ -115,7 +126,7 @@
 </div>
 
 {{-- ── Row 3: Pinjaman Aktif + Buku Terbaru ── --}}
-<div class="dashboard-bottom-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;" class="bottom-grid-member">
 
     {{-- Pinjaman Aktif --}}
     <div class="member-card" style="border-radius:16px;padding:20px;">
@@ -174,7 +185,7 @@
             <p class="section-label" style="margin-bottom:0;">Buku Terbaru</p>
             <a href="{{ route('buku.index') }}" style="color:rgba(255,255,255,0.25);font-size:11px;text-decoration:none;" onmouseover="this.style.color='rgba(255,255,255,0.55)'" onmouseout="this.style.color='rgba(255,255,255,0.25)'">Semua →</a>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;" class="buku-grid-member">
             @foreach($bukuTerbaru as $buku)
             <a href="{{ route('buku.index') }}" style="text-decoration:none;">
                 <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:10px;transition:background 0.2s,transform 0.2s;"
